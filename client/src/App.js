@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 // Import the ABI from the JSON file you created
 import AntiFraudSystemABI from './AntiFraudSystemABI.json';
 
-// Paste the contract address you saved from the deployment
+// The contract address saved from the deployment
 const contractAddress = "0xB4448140135434b7F05BdEbD57BE0ef06c70DB12";
 
 // --- Main App Component ---
