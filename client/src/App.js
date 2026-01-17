@@ -27,6 +27,7 @@ function App() {
   // Admin Panel states
   const [adminAddress, setAdminAddress] = useState('');
   const [adminStatus, setAdminStatus] = useState(1); // Default to Active
+  const [maxTransactionAmount, setMaxTransactionAmount] = useState('');
 
   // small UI helpers
   const showToast = (message, type = 'info', duration = 4000) => {
@@ -229,6 +230,30 @@ function App() {
     }
   };
 
+  const handleUpdateMaxTransaction = async (e) => {
+    e.preventDefault();
+    if (contract && maxTransactionAmount) {
+      if (isNaN(Number(maxTransactionAmount)) || Number(maxTransactionAmount) <= 0) {
+        showToast("Invalid amount", 'error');
+        return;
+      }
+      setIsLoading(true);
+      try {
+        const newMax = ethers.parseEther(maxTransactionAmount);
+        const tx = await contract.setMaxTransactionAmount(newMax);
+        await tx.wait();
+        showToast(`Max transaction amount updated to ${maxTransactionAmount} MYR`, 'success');
+        setMaxTransactionAmount('');
+      } catch (error) {
+        console.error("Failed to update max transaction amount:", error);
+        const reason = error.reason || (error.data && error.data.message) || "An unknown error occurred.";
+        showToast(`Failed to update max transaction amount: ${reason}`, 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
   // Refresh actions
   const refreshAll = async () => {
     if (!contract || !account) return;
@@ -397,19 +422,35 @@ function App() {
       <div className="card-head"><h2>⚙️ Admin Panel</h2></div>
       <div className="card-body">
         <p style={{color: '#718096', marginBottom: 16}}>Manage user accounts and fraud detection settings.</p>
-        <form onSubmit={handleSetUserStatus}>
-          <label>User Address</label>
-          <input className="input" type="text" value={adminAddress} onChange={(e) => setAdminAddress(e.target.value)} placeholder="0x..." required />
-          <label>Set User Status</label>
-          <select className="input" value={adminStatus} onChange={(e) => setAdminStatus(Number(e.target.value))}>
-            <option value={1}>✅ Active</option>
-            <option value={2}>🚫 Suspended</option>
-          </select>
-          <div style={{display:'flex',gap:10,marginTop:18}}>
-            <button className="btn danger" type="submit" disabled={isLoading} style={{flex: 1}}>{isLoading ? <><Spinner/>Processing</> : '🔧 Update Status'}</button>
-            <button className="btn subtle" type="button" onClick={() => setAdminAddress('')} style={{flex: 1}}>Clear</button>
-          </div>
-        </form>
+        
+        <div style={{marginBottom: 28, paddingBottom: 20, borderBottom: '1px solid #e2e8f0'}}>
+          <h3 style={{margin: '0 0 16px 0', fontSize: 16, fontWeight: 600, color: '#2d3748'}}>👤 Manage User Status</h3>
+          <form onSubmit={handleSetUserStatus}>
+            <label>User Address</label>
+            <input className="input" type="text" value={adminAddress} onChange={(e) => setAdminAddress(e.target.value)} placeholder="0x..." required />
+            <label>Set User Status</label>
+            <select className="input" value={adminStatus} onChange={(e) => setAdminStatus(Number(e.target.value))}>
+              <option value={1}>✅ Active</option>
+              <option value={2}>🚫 Suspended</option>
+            </select>
+            <div style={{display:'flex',gap:10,marginTop:18}}>
+              <button className="btn danger" type="submit" disabled={isLoading} style={{flex: 1}}>{isLoading ? <><Spinner/>Processing</> : '🔧 Update Status'}</button>
+              <button className="btn subtle" type="button" onClick={() => setAdminAddress('')} style={{flex: 1}}>Clear</button>
+            </div>
+          </form>
+        </div>
+
+        <div>
+          <h3 style={{margin: '0 0 16px 0', fontSize: 16, fontWeight: 600, color: '#2d3748'}}>💰 Set Max Transaction Limit</h3>
+          <form onSubmit={handleUpdateMaxTransaction}>
+            <label>Maximum Amount per Transaction (MYR)</label>
+            <input className="input" type="text" value={maxTransactionAmount} onChange={(e) => setMaxTransactionAmount(e.target.value)} placeholder="1000.00" required />
+            <div style={{display:'flex',gap:10,marginTop:18}}>
+              <button className="btn danger" type="submit" disabled={isLoading} style={{flex: 1}}>{isLoading ? <><Spinner/>Processing</> : '💳 Update Limit'}</button>
+              <button className="btn subtle" type="button" onClick={() => setMaxTransactionAmount('')} style={{flex: 1}}>Clear</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
